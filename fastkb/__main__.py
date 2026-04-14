@@ -33,47 +33,50 @@ def init_db():
         sys.exit(1)
 
 
-def index_path(root_path):
+def save_to_db(cursor, file_path):
     """
-    Add documents to database.
+    Read file and add it to database.
+    """
+
+    try:
+        content = file_path.read_text(encoding="utf-8", errors="ignore")
+        stats = file_path.stat()
+        cursor.execute(
+            """
+            INSERT OR REPLACE INTO documents 
+            (path, content, file_type, file_size)
+            VALUES (?, ?, ?, ?)
+            """,
+            (str(file_path.absolute()), content, file_path.suffix, stats.st_size),
+        )
+        return True
+    except Exception as e:
+        print(f"Skip file {file_path}: {e}")
+        return False
+
+
+def index_paths(paths):
+    """
+    Process data to index.
     """
 
     connection = sqlite3.connect("fastkb.db")
     cursor = connection.cursor()
+    total_indexed = 0
 
-    indexed_count = 0
-    root = Path(root_path)
+    for p in paths:
+        path_obj = Path(p)
 
-    for file_path in root.rglob("*"):
-        if file_path.is_file():
-            try:
-                content = file_path.read_text(
-                    encoding="utf-8",
-                    errors="ignore",
-                )
+        targets = [path_obj] if path_obj.is_file() else path_obj.rglob("*")
 
-                stats = file_path.stat()
-
-                cursor.execute(
-                    """
-                    INSERT OR REPLACE INTO documents 
-                    (path, content, file_type, file_size)
-                    VALUES (?, ?, ?, ?)
-                    """,
-                    (
-                        str(file_path.absolute()),
-                        content,
-                        file_path.suffix,
-                        stats.st_size,
-                    ),
-                )
-                indexed_count += 1
-            except Exception as e:
-                print(f"Skip file {file_path}: {e}")
+        for file_path in targets:
+            if file_path.is_file():
+                if save_to_db(cursor, file_path):
+                    total_indexed += 1
 
     connection.commit()
     connection.close()
-    print(f"Index all. Proccesed: {indexed_count}")
+    print(f"Index all. Processed: {total_indexed}")
 
 
 def main():
@@ -94,7 +97,8 @@ def main():
     index_parser = subparsers.add_parser("index")
     index_parser.add_argument(
         "path",
-        help="Path or file to index",
+        nargs="+",
+        help="Pathes or files to index",
     )
 
     args = parser.parse_args()
@@ -102,7 +106,7 @@ def main():
     if args.command == "init":
         init_db()
     elif args.command == "index":
-        index_path(args.path)
+        index_paths(args.path)
     else:
         parser.print_help()
 
