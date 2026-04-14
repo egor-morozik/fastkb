@@ -15,19 +15,58 @@ def init_db():
     try:
         connection = sqlite3.connect("fastkb.db")
         cursor = connection.cursor()
-        cursor.execute("""
+
+        cursor.execute(
+            """
             CREATE TABLE IF NOT EXISTS documents (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 path TEXT UNIQUE,
                 content TEXT,
                 file_type TEXT,
-                file_size INTEGER,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                file_size INTEGER
             )
-        """)
+            """
+        )
+
+        cursor.execute(
+            """
+            CREATE VIRTUAL TABLE IF NOT EXISTS documents_fts 
+            USING fts5(path, content, content='documents', content_rowid='id')
+            """
+        )
+
+        cursor.execute(
+            """
+            CREATE TRIGGER IF NOT EXISTS documents_ai AFTER INSERT ON documents BEGIN
+            INSERT INTO documents_fts(rowid, path, content) VALUES (new.id, new.path, new.content);
+            END
+            """
+        )
+
+        cursor.execute(
+            """
+            CREATE TRIGGER IF NOT EXISTS documents_ad AFTER DELETE ON documents BEGIN
+            INSERT INTO documents_fts(documents_fts, rowid, path, content) 
+            VALUES('delete', old.id, old.path, old.content);
+            END
+            """
+        )
+
+        cursor.execute(
+            """
+            CREATE TRIGGER IF NOT EXISTS documents_au AFTER UPDATE ON documents BEGIN
+            INSERT INTO documents_fts(documents_fts, rowid, path, content) 
+            VALUES('delete', old.id, old.path, old.content);
+            INSERT INTO documents_fts(rowid, path, content) 
+            VALUES(new.id, new.path, new.content);
+            END
+            """
+        )
+
         connection.commit()
         connection.close()
         print("Database fastkb.db init, table 'documents' created.")
+
     except Exception as e:
         print(f"Init database error: {e}")
         sys.exit(1)
@@ -79,6 +118,37 @@ def index_paths(paths):
     print(f"Index all. Processed: {total_indexed}")
 
 
+def query_db(search_text):
+    """
+    Find top-5 files by query.
+    """
+
+    connection = sqlite3.connect("fastkb.db")
+    cursor = connection.cursor()
+
+    query = """
+        SELECT path FROM documents_fts 
+        WHERE documents_fts MATCH ? 
+        ORDER BY rank 
+        LIMIT 5
+    """
+
+    cursor.execute(
+        query,
+        (search_text,),
+    )
+    results = cursor.fetchall()
+
+    if not results:
+        print("Can't find.")
+    else:
+        print(f"Top-5 for '{search_text}':")
+        for i, (path,) in enumerate(results, 1):
+            print(f"{i}. {path}")
+
+    connection.close()
+
+
 def main():
     parser = argparse.ArgumentParser(
         prog="fastkb",
@@ -101,12 +171,23 @@ def main():
         help="Pathes or files to index",
     )
 
+    query_parser = subparsers.add_parser(
+        "query",
+        help="Find by database",
+    )
+    query_parser.add_argument(
+        "text",
+        help="Text for search",
+    )
+
     args = parser.parse_args()
 
     if args.command == "init":
         init_db()
     elif args.command == "index":
         index_paths(args.path)
+    elif args.command == "query":
+        query_db(args.text)
     else:
         parser.print_help()
 
