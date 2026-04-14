@@ -1,0 +1,21 @@
+[project]
+name = "fastkb"
+version = "0.1.0"
+description = "CLI utilit to find"
+readme = "README.md"
+authors = [
+    { name = "Egor Morozik", email = "egor.mrz04@gmail.com" }
+]
+requires-python = ">=3.13"
+dependencies = [
+    "argparse>=1.4.0",
+]
+
+[build-system]
+requires = ["uv_build>=0.9.28,<0.10.0"]
+build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "ruff>=0.15.10",
+]
