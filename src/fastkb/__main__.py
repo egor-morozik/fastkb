@@ -58,8 +58,21 @@ def main():
             print("Can't find.")
         else:
             print(f"Top-5 for '{arguments.text}':")
-            for i, (path,) in enumerate(results, 1):
-                print(f"{i}. {path}")
+            search_lower = arguments.text.lower()
+
+            for i, (path, content) in enumerate(results, 1):
+                lines = content.splitlines()
+                matching_lines = [
+                    idx
+                    for idx, line in enumerate(lines, start=1)
+                    if search_lower in line.lower()
+                ]
+
+                if matching_lines:
+                    lines_str = ", ".join(map(str, matching_lines))
+                    print(f"{i}. {path} (strings: {lines_str})")
+                else:
+                    print(f"{i}. {path} (FTS matching, can't find strings)")
     else:
         argument_parser.print_help()
 

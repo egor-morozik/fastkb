@@ -101,10 +101,11 @@ def search_documents_in_database(search_text, limit=5):
         cursor = connection.cursor()
         cursor.execute(
             """
-            SELECT path 
-            FROM documents_fts 
-            WHERE documents_fts MATCH ? 
-            ORDER BY rank 
+            SELECT d.path, d.content
+            FROM documents_fts f
+            JOIN documents d ON f.rowid = d.id
+            WHERE documents_fts MATCH ?
+            ORDER BY f.rank
             LIMIT ?
             """,
             (search_text, limit),

@@ -34,4 +34,3 @@ def get_all_files_by_pathes(target_pathes):
             yield path_object
         else:
             yield from path_object.rglob("*")
-            
