@@ -7,30 +7,31 @@ def extract_file_data_by_path(file_path):
     """
 
     try:
-        content = file_path.read_text(
+        file_content = file_path.read_text(
             encoding="utf-8",
             errors="ignore",
         )
-        stats = file_path.stat()
+        file_statistics = file_path.stat()
         return {
             "path": str(file_path.absolute()),
-            "content": content,
+            "content": file_content,
             "file_type": file_path.suffix,
-            "file_size": stats.st_size,
+            "file_size": file_statistics.st_size,
         }
-    except Exception as expection:
-        print(f"Skip file {file_path}: {expection}")
+    except Exception as exception_instance:
+        print(f"Skip file {file_path}: {exception_instance}")
         return None
 
 
-def get_all_files_by_pathes(paths):
+def get_all_files_by_pathes(target_pathes):
     """
     Generator that return all files.
     """
 
-    for path in paths:
-        path_object = Path(path)
+    for current_path in target_pathes:
+        path_object = Path(current_path)
         if path_object.is_file():
             yield path_object
         else:
             yield from path_object.rglob("*")
+            
