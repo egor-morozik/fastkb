@@ -80,9 +80,12 @@ def insert_document_to_database(path, content, file_type, file_size):
         cursor = connection.cursor()
         cursor.execute(
             """
-            INSERT OR REPLACE INTO documents 
-            (path, content, file_type, file_size) 
+            INSERT INTO documents (path, content, file_type, file_size) 
             VALUES (?, ?, ?, ?)
+            ON CONFLICT(path) DO UPDATE SET
+                content=excluded.content,
+                file_type=excluded.file_type,
+                file_size=excluded.file_size
             """,
             (path, content, file_type, file_size),
         )
