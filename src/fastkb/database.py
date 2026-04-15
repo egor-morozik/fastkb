@@ -33,7 +33,7 @@ def init_database():
         cursor.execute(
             """
             CREATE VIRTUAL TABLE IF NOT EXISTS documents_fts 
-            USING fts5(path, content, content='documents', content_rowid='id')
+            USING fts5(path, content, content='documents', content_rowid='id', tokenize="unicode61")
             """
         )
 
