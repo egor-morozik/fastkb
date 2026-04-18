@@ -1,105 +1,103 @@
 import sqlite3
 
-import sys
+from contextlib import contextmanager
 
 
 DATABASE_NAME = "fastkb.db"
 
 
+@contextmanager
 def get_connection():
-    return sqlite3.connect(DATABASE_NAME)
+    """
+    Yield a SQLite connection with WAL mode enabled.
+    """
+
+    connection = sqlite3.connect(DATABASE_NAME)
+    connection.execute("PRAGMA journal_mode=WAL")
+    connection.execute("PRAGMA foreign_keys=ON")
+
+    yield connection
+
+    connection.close()
 
 
 def init_database():
     """
-    Create database DATABASE_NAME and documents table.
-    """
-
-    try:
-        with get_connection() as connection:
-            cursor = connection.cursor()
-            cursor.execute(
-                """
-                CREATE TABLE IF NOT EXISTS documents (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    path TEXT UNIQUE,
-                    content TEXT,
-                    file_type TEXT,
-                    file_size INTEGER
-                )
-                """
-            )
-
-            cursor.execute(
-                """
-                CREATE VIRTUAL TABLE IF NOT EXISTS documents_fts 
-                USING fts5(path, content, content='documents', content_rowid='id', tokenize="unicode61")
-                """
-            )
-
-            cursor.execute(
-                """
-                CREATE TRIGGER IF NOT EXISTS documents_ai AFTER INSERT ON documents BEGIN
-                INSERT INTO documents_fts(rowid, path, content) VALUES (new.id, new.path, new.content);
-                END
-                """
-            )
-
-            cursor.execute(
-                """
-                CREATE TRIGGER IF NOT EXISTS documents_ad AFTER DELETE ON documents BEGIN
-                INSERT INTO documents_fts(documents_fts, rowid, path, content) 
-                VALUES('delete', old.id, old.path, old.content);
-                END
-                """
-            )
-
-            cursor.execute(
-                """
-                CREATE TRIGGER IF NOT EXISTS documents_au AFTER UPDATE ON documents BEGIN
-                INSERT INTO documents_fts(documents_fts, rowid, path, content) 
-                VALUES('delete', old.id, old.path, old.content);
-                INSERT INTO documents_fts(rowid, path, content) 
-                VALUES(new.id, new.path, new.content);
-                END
-                """
-            )
-            connection.commit()
-        print(f"Database {DATABASE_NAME} initialized.")
-    except Exception as expection:
-        print(f"Init database error: {expection}")
-        sys.exit(1)
-
-
-def insert_document_to_database(path, content, file_type, file_size):
-    """
-    Insert file data to database.
+    Create documents table, FTS5 virtual table, and sync triggers.
     """
 
     with get_connection() as connection:
-        cursor = connection.cursor()
-        cursor.execute(
+        connection.execute(
             """
-            INSERT INTO documents (path, content, file_type, file_size) 
-            VALUES (?, ?, ?, ?)
-            ON CONFLICT(path) DO UPDATE SET
-                content=excluded.content,
-                file_type=excluded.file_type,
-                file_size=excluded.file_size
-            """,
-            (path, content, file_type, file_size),
+            CREATE TABLE IF NOT EXISTS documents (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                path TEXT UNIQUE NOT NULL,
+                content TEXT NOT NULL,
+                file_type TEXT NOT NULL,
+                file_size INTEGER NOT NULL
+            )
+            """
         )
-        connection.commit()
+        connection.execute(
+            """
+            CREATE VIRTUAL TABLE IF NOT EXISTS documents_fts
+            USING fts5(path, content, content='documents', content_rowid='id', tokenize="unicode61")
+            """
+        )
+        connection.execute(
+            """
+            CREATE TRIGGER IF NOT EXISTS documents_ai AFTER INSERT ON documents BEGIN
+                INSERT INTO documents_fts(rowid, path, content) VALUES (new.id, new.path, new.content);
+            END
+            """
+        )
+        connection.execute(
+            """
+            CREATE TRIGGER IF NOT EXISTS documents_ad AFTER DELETE ON documents BEGIN
+                INSERT INTO documents_fts(documents_fts, rowid, path, content)
+                VALUES('delete', old.id, old.path, old.content);
+            END
+            """
+        )
+        connection.execute(
+            """
+            CREATE TRIGGER IF NOT EXISTS documents_au AFTER UPDATE ON documents BEGIN
+                INSERT INTO documents_fts(documents_fts, rowid, path, content)
+                VALUES('delete', old.id, old.path, old.content);
+                INSERT INTO documents_fts(rowid, path, content)
+                VALUES(new.id, new.path, new.content);
+            END
+            """
+        )
+    print(f"Database '{DATABASE_NAME}' initialized successfully.")
 
 
-def search_documents_in_database(search_text, limit=5):
+def save_documents(documents):
     """
-    Search files at database by text (by file name and content).
+    Insert or update multiple documents in a single transaction.
     """
 
-    with get_connection() as connection:
-        cursor = connection.cursor()
-        cursor.execute(
+    if not documents:
+        return
+    query = """
+            INSERT INTO documents (path, content, file_type, file_size)
+            VALUES (:path, :content, :file_type, :file_size)
+            ON CONFLICT(path) DO UPDATE SET
+                content = excluded.content,
+                file_type = excluded.file_type,
+                file_size = excluded.file_size
+            """
+    with get_connection() as conn:
+        conn.executemany(query, documents)
+
+
+def find_documents(query, limit):
+    """
+    Execute FTS5 search and return (path, content) tuples.
+    """
+
+    with get_connection() as conn:
+        cursor = conn.execute(
             """
             SELECT d.path, d.content
             FROM documents_fts f
@@ -108,6 +106,9 @@ def search_documents_in_database(search_text, limit=5):
             ORDER BY f.rank
             LIMIT ?
             """,
-            (search_text, limit),
+            (
+                query,
+                limit,
+            ),
         )
         return cursor.fetchall()
