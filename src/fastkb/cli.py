@@ -1,3 +1,4 @@
+import sys
 import argparse
 
 from .database import init_database
@@ -44,13 +45,17 @@ def parse_args():
 def main():
     args = parse_args()
 
-    if args.command == "init":
-        init_database()
-    elif args.command == "index":
-        count = load_documents(args.paths)
-        print(f"Indexing complete. Processed: {count} file(s).")
-    elif args.command == "query":
-        execute_search(
-            args.text,
-            limit=args.limit,
-        )
+    try:
+        if args.command == "init":
+            init_database()
+        elif args.command == "index":
+            count = load_documents(args.paths)
+            print(f"Indexing complete. Processed: {count} file(s).")
+        elif args.command == "query":
+            execute_search(
+                args.text,
+                limit=args.limit,
+            )
+    except Exception as expection:
+        print(f"\nError: {expection}")
+        sys.exit(1)

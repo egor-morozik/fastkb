@@ -18,17 +18,21 @@ def read_document(file_path):
     Read file content and return metadata dict, or None on failure.
     """
 
-    content = file_path.read_text(
-        encoding="utf-8",
-        errors="ignore",
-    )
-    file_statistic = file_path.stat()
-    return {
-        "path": str(file_path.resolve()),
-        "content": content,
-        "file_type": file_path.suffix.lower(),
-        "file_size": file_statistic.st_size,
-    }
+    try:
+        content = file_path.read_text(
+            encoding="utf-8",
+            errors="ignore",
+        )
+        file_statistic = file_path.stat()
+        return {
+            "path": str(file_path.resolve()),
+            "content": content,
+            "file_type": file_path.suffix.lower(),
+            "file_size": file_statistic.st_size,
+        }
+    except Exception as expection:
+        print(f"Skipping {file_path}: {expection}")
+        return None
 
 
 def load_documents(paths, batch_size=200):
