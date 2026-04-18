@@ -92,8 +92,8 @@ def save_documents(documents):
                 file_type = excluded.file_type,
                 file_size = excluded.file_size
             """
-    with get_connection() as conn:
-        conn.executemany(query, documents)
+    with get_connection() as connection:
+        connection.executemany(query, documents)
 
 
 def find_documents(query, limit):
@@ -101,8 +101,8 @@ def find_documents(query, limit):
     Execute FTS5 search and return (path, content) tuples.
     """
 
-    with get_connection() as conn:
-        cursor = conn.execute(
+    with get_connection() as connection:
+        cursor = connection.execute(
             """
             SELECT d.path, d.content
             FROM documents_fts f

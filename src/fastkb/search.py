@@ -26,13 +26,13 @@ def format_results(results, query):
         return "No results found."
 
     lines = [f"Top-{len(results)} for '{query}':\n"]
-    for i, (path, content) in enumerate(results, 1):
+    for index, (path, content) in enumerate(results, 1):
         matching = extract_matching_lines(content, query)
         if matching:
             lines_str = ", ".join(map(str, matching))
-            lines.append(f"{i}. {path} (lines: {lines_str})")
+            lines.append(f"{index}. {path} (lines: {lines_str})")
         else:
-            lines.append(f"{i}. {path} (FTS match, exact lines not found)")
+            lines.append(f"{index}. {path} (FTS match, exact lines not found)")
 
     return "\n".join(lines)
 
