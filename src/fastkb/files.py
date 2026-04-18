@@ -30,8 +30,8 @@ def read_document(file_path):
             "file_type": file_path.suffix.lower(),
             "file_size": file_statistic.st_size,
         }
-    except Exception as expection:
-        print(f"Skipping {file_path}: {expection}")
+    except Exception as exception:
+        print(f"Skipping {file_path}: {exception}")
         return None
 
 
