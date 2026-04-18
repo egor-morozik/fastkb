@@ -1,3 +1,5 @@
+from pathlib import Path
+
 from .database import save_documents
 
 
@@ -7,6 +9,7 @@ def iter_paths(paths):
     """
 
     for path in paths:
+        path = Path(path)
         if path.is_file():
             yield path
         elif path.is_dir():
