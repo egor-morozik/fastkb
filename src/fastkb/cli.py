@@ -32,11 +32,18 @@ def parse_args():
     )
 
     query_cmd = subparsers.add_parser(
-        "query", help="Search the indexed knowledge base."
+        "query",
+        help="Search the indexed knowledge base.",
     )
     query_cmd.add_argument(
         "text",
         help="Search query (FTS5 syntax).",
+    )
+    query_cmd.add_argument(
+        "-l",
+        "--limit",
+        default=5,
+        help="Max results (default: 5).",
     )
 
     return parser.parse_args()
@@ -56,6 +63,6 @@ def main():
                 args.text,
                 limit=args.limit,
             )
-    except Exception as expection:
-        print(f"\nError: {expection}")
+    except Exception as exception:
+        print(f"\nError: {exception}")
         sys.exit(1)

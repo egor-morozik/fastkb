@@ -26,9 +26,9 @@ Scan folders or specific files:
 python fastkb index ./docs ./notes.txt
 ```
 
-### 3. Query
+### 3. Search
 
-Search for content (returns top 5 results):
+Search for content (returns top 5 results by default):
 
 ```bash
 python fastkb query "your search term"
@@ -36,8 +36,14 @@ python fastkb query "your search term"
 
 ### Commands
 
-| Command | Arguments | Description |
-| :--- | :--- | :--- |
-| `init` | - | Setup fastkb.db and FTS5 tables. |
-| `index` | `path [path ...]` | Index folders or files recursively. |
-| `query` | `text` | Search ranked results by content. |
+| Command | Arguments           | Description                            |
+| :------ | :------------------ | :------------------------------------- |
+| `init`  | -                   | Initialize database and FTS index      |
+| `index` | `paths [paths ...]` | Index directories or files recursively |
+| `query` | `text`              | Search the indexed knowledge base      |
+
+### Query Options
+
+| Option        | Default | Description                                |
+| :------------ | :------ | :----------------------------------------- |
+| `-l, --limit` | `5`     | Maximum number of search results to return |
