@@ -1,6 +1,6 @@
 [project]
 name = "fastkb"
-version = "0.2.2"
+version = "0.2.3"
 description = "CLI utilit to find info in file system"
 readme = "README.md"
 authors = [
