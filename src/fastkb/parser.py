@@ -7,6 +7,13 @@ def build_parser():
         description="Fast local knowledge base with FTS5 search.",
     )
 
+    parser.add_argument(
+        "--memory",
+        "-m",
+        action="store_true",
+        help="Use in-memory database (non-persistent)",
+    )
+
     subparsers = parser.add_subparsers(
         dest="command",
         required=True,
@@ -37,7 +44,6 @@ def build_parser():
     query_parser.add_argument(
         "-l",
         "--limit",
-        default=5,
         help="Max results (default: 5).",
     )
 

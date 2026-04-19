@@ -8,12 +8,8 @@ def handle_init(args):
 
 
 def handle_index(args):
-    count = load_documents(args.paths)
-    print(f"Indexing complete. Processed: {count} file(s).")
+    load_documents(args.paths)
 
 
 def handle_query(args):
-    execute_search(
-        args.text,
-        limit=args.limit,
-    )
+    execute_search(args.text)

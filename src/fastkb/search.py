@@ -1,4 +1,5 @@
 from .database import find_documents
+from .settings import config
 
 
 def extract_matching_lines(content, query):
@@ -37,15 +38,17 @@ def format_results(results, query):
     return "\n".join(lines)
 
 
-def execute_search(query, limit=5):
+def execute_search(query):
     """
     Run FTS5 search and print formatted results.
     """
 
+    limit = config.search_limit
     results = find_documents(
         query,
         limit,
     )
+
     print(
         format_results(
             results,

@@ -1,6 +1,7 @@
 from pathlib import Path
 
 from .database import save_documents
+from .settings import config
 
 
 def iter_paths(paths):
@@ -38,12 +39,13 @@ def read_document(file_path):
         return None
 
 
-def load_documents(paths, batch_size=200):
+def load_documents(paths):
     """
     Walk paths, read documents, and save them in batches.
     """
 
-    total = 0
+    number_of_documents = 0
+    batch_size = config.batch_size
     batch = []
 
     for file_path in iter_paths(paths):
@@ -53,13 +55,12 @@ def load_documents(paths, batch_size=200):
         document = read_document(file_path)
         if document:
             batch.append(document)
-            total += 1
+            number_of_documents += 1
 
             if len(batch) >= batch_size:
                 save_documents(batch)
                 batch.clear()
-
     if batch:
         save_documents(batch)
 
-    return total
+    print(f"Indexing complete. Processed: {number_of_documents} file(s).")

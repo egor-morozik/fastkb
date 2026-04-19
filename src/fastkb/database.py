@@ -2,8 +2,7 @@ import sqlite3
 
 from contextlib import contextmanager
 
-
-DATABASE_NAME = "fastkb.db"
+from .settings import config
 
 
 @contextmanager
@@ -12,9 +11,7 @@ def get_connection():
     Yield a SQLite connection with WAL mode enabled.
     """
 
-    connection = sqlite3.connect(DATABASE_NAME)
-    connection.execute("PRAGMA journal_mode=WAL")
-    connection.execute("PRAGMA foreign_keys=ON")
+    connection = sqlite3.connect(config.db_path)
 
     try:
         yield connection
@@ -23,7 +20,8 @@ def get_connection():
         connection.rollback()
         raise
     finally:
-        connection.close()
+        if not config.memory_mode:
+            connection.close()
 
 
 def init_database():
@@ -74,7 +72,7 @@ def init_database():
             END
             """
         )
-    print(f"Database '{DATABASE_NAME}' initialized successfully.")
+    print(f"Database '{config.db_path}' initialized successfully.")
 
 
 def save_documents(documents):
