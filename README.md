@@ -1,3 +1,5 @@
+![License: MIT](https://shields.io)
+
 # FastKB
 
 A minimalist CLI tool for indexing and searching local text files using SQLite FTS5.
