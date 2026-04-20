@@ -1,12 +1,27 @@
 # FastKB
 
-A minimalist CLI tool for indexing and searching local text files using SQLite FTS5.
+A minimalist CLI tool for indexing and searching local text files using SQLite FTS5. Fast, offline, and zero-dependency.
 
 ## Features
 
-**Fast Indexing**: Recursively scans directories and files.
-**Full-Text Search**: Instant ranked search (BM25) via SQLite FTS5.
-**Auto-Sync**: SQL triggers keep the search index updated automatically.
+- **Fast Indexing**: Recursively scans directories and files.
+- **Full-Text Search**: Instant ranked search (BM25) via SQLite FTS5.
+- **Auto-Sync**: SQL triggers keep the search index updated automatically.
+- **In-Memory Mode**: Run entirely in RAM for zero-disk-footprint operations.
+
+## Installation
+
+**Core (CLI + FTS5 search):**
+
+```bash
+pip install fastkb
+```
+
+**With AI/MCP support:**
+
+```bash
+pip install "fastkb[mcp]"
+```
 
 ## Quick Start
 
@@ -15,7 +30,7 @@ A minimalist CLI tool for indexing and searching local text files using SQLite F
 Create the database and search triggers:
 
 ```bash
-python fastkb init
+fastkb init
 ```
 
 ### 2. Index
@@ -23,7 +38,7 @@ python fastkb init
 Scan folders or specific files:
 
 ```bash
-python fastkb index ./docs ./notes.txt
+fastkb index ./docs ./notes.txt
 ```
 
 ### 3. Search
@@ -31,8 +46,10 @@ python fastkb index ./docs ./notes.txt
 Search for content (returns top 5 results by default):
 
 ```bash
-python fastkb query "your search term"
+fastkb query "your search term"
 ```
+
+## Advanced Usage
 
 ### In-Memory Mode
 
@@ -45,6 +62,8 @@ fastkb --memory query "timeout error"
 
 > **Note:** The in-memory database is transient and clears when the process exits. Best used for single-session workflows or scripted runs.
 
+## CLI Reference
+
 ### Commands
 
 | Command | Arguments           | Description                            |
@@ -53,9 +72,13 @@ fastkb --memory query "timeout error"
 | `index` | `paths [paths ...]` | Index directories or files recursively |
 | `query` | `text`              | Search the indexed knowledge base      |
 
-### Query Options
+### Global & Query Options
 
 | Flag           | Scope   | Default | Description                                |
 | :------------- | :------ | :------ | :----------------------------------------- |
 | `-m, --memory` | Global  | `false` | Use in-memory database (non-persistent)    |
 | `-l, --limit`  | `query` | `5`     | Maximum number of search results to return |
+
+## AI Integration
+
+FastKB supports the [Model Context Protocol (MCP)](https://modelcontextprotocol.io) for seamless integration with Claude Desktop, Cursor, Cline, Continue, and other AI assistants.
