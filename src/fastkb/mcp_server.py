@@ -1,12 +1,3 @@
-try:
-    from mcp.server.fastmcp import FastMCP
-except ImportError as exception:
-    raise ImportError(
-        "MCP dependencies are not installed.\n"
-        "Run: pip install fastkb[mcp]\n"
-        "Or for dev: pip install -e '.[mcp]'"
-    ) from exception
-
 import os
 
 from mcp.server.fastmcp import FastMCP

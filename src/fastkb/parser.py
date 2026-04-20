@@ -44,6 +44,8 @@ def build_parser():
     query_parser.add_argument(
         "-l",
         "--limit",
+        type=int,
+        default=5,
         help="Max results (default: 5).",
     )
 
